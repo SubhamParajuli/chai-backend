@@ -1,0 +1,68 @@
+import { ServerMonitoringMode } from "mongodb"
+import mongoose from "mongoose"
+import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
+
+
+const UserSchema= new mongoose.Schema(
+  {
+    username:{
+      required: true,
+      type: String,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      index: true,
+    },
+
+    email:{
+      required: true,
+      type: String,
+      unique: true,
+      lowercase: true,
+    },
+
+     fullname:{
+      required: true,
+      type: String,
+      index: true,
+      trim:true,
+    },
+
+    avatar:{
+      type:String, //cloudinary url
+      required: true,
+    },
+
+    coverImage:{
+      type:String,
+    }, 
+    
+    watchHistory:{
+      type:Schema.Types.ObjectId,
+      ref:"Video"
+    },
+
+    password:{
+      type:String,
+      required:[true,"Password is required."]
+    },
+
+    refreshToken:{
+      type:String
+    }
+
+  }
+, timestamps= True)
+
+UserSchema.pre("save",async function(next){
+  if(!this.isModified("password"))return next();
+  this.password = bcrypt.hash(this.password,10)//encrypt password
+  next()
+})
+
+UserSchema.methods.isPasswordCorrect= async function(password){
+  return await bcrypt.compare(password,this.password)
+}
+
+export const User= mongoose.model("User", UserSchema)
